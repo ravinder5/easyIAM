@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
@@ -29,9 +30,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     AuthCodeRepository authCodeRepository;
 
     @Override
-    public String autheticateUser(String username, String password) {
+    public String autheticateUser(String username, String password, String auth_cookie_id) {
         Optional<User> user = userAuthentication.findById(username);
+        Optional<AuthCookie> authCookie = authCookieRepository.findById(auth_cookie_id);
         if(user.isPresent()) {
+
             return user.get().getUser_id();
         }
         return null;
@@ -41,8 +44,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public String getAuthCode(String client_id, String client_secret, String redirect_uri, String scope, String state, String auth_cookie_id) {
         Optional<ClientConfig> clientConfig = clientConfigRepository.findById(client_id);
         Optional<AuthCookie> authCookie = authCookieRepository.findById(auth_cookie_id);
-        AuthCode authCode = new AuthCode();
-        authCodeRepository.save(authCode);
-        return "1234567";
+        if (authCookie.get().isAuthenticated()) {
+            AuthCode authCode = new AuthCode();
+            authCode.setAuth_code_id(UUID.randomUUID().toString());
+            authCode.setClient_id(client_id);
+            authCode.setScope(clientConfig.get().getScope());
+            authCode.setUser_id(authCookie.get().getUser_id());
+            authCode.setUser_name(authCookie.get().getUser_name());
+            authCodeRepository.save(authCode);
+            return redirect_uri + "?code=" + authCode.getAuth_code_id();
+        } else {
+            return redirect_uri;
+        }
     }
 }

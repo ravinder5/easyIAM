@@ -18,7 +18,7 @@ public class AuthenticationController {
 
     @PostMapping()
     public String authenticate(@RequestBody @Valid User user, BindingResult bindingResult){
-        String userId = authenticationService.autheticateUser(user.getUser_name(), user.getPassword());
+        String userId = authenticationService.autheticateUser(user.getUser_name(), user.getPassword(), "1234567890");
         return userId;
     }
 
