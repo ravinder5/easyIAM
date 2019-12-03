@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/ravinder5/easyiam.svg?branch=master)](https://travis-ci.com/ravinder5/easyiam)
+
 ### Pre-requisites
 
 For running this application in your local you must have below tools installed in your server:
