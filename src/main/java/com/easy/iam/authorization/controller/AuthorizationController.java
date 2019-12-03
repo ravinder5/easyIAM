@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 
 @RestController
 @RequestMapping("/auth/tokens")
@@ -22,7 +24,7 @@ public class AuthorizationController {
     AuthorizationService authorizationService;
 
     @PostMapping()
-    public TokenResponse generateTokens(@RequestBody @Valid TokenRequest tokenRequest, BindingResult bindingResult){
+    public TokenResponse generateTokens(@RequestBody @Valid TokenRequest tokenRequest, BindingResult bindingResult) throws InvalidKeySpecException, NoSuchAlgorithmException {
         TokenResponse tokenResponse = authorizationService.generateTokens(tokenRequest);
         return tokenResponse;
     }
