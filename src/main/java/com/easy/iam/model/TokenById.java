@@ -13,7 +13,7 @@ import javax.validation.constraints.NotBlank;
 @AllArgsConstructor
 @Data
 @Table
-public class Token {
+public class TokenById {
     @PrimaryKey
     @NotBlank
     private @NonNull String token_id;
@@ -21,5 +21,5 @@ public class Token {
     private String user_id;
     private String client_id;
     private String scope;
-    private String token;
+    private String access_token;
 }

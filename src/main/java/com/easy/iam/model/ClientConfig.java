@@ -8,6 +8,7 @@ import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
 
 import javax.validation.constraints.NotBlank;
+import java.util.ArrayList;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,4 +20,5 @@ public class ClientConfig {
     private @NonNull String client_id;
     private String client_secret;
     private String scope;
+    private ArrayList<String> grant_types;
 }

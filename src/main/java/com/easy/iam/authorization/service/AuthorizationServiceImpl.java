@@ -5,7 +5,7 @@ import com.easy.iam.authorization.model.TokenResponse;
 import com.easy.iam.encryption.CryptoService;
 import com.easy.iam.model.AuthCode;
 import com.easy.iam.model.ClientConfig;
-import com.easy.iam.model.Token;
+import com.easy.iam.model.TokenById;
 import com.easy.iam.repository.AuthCodeRepository;
 import com.easy.iam.repository.ClientConfigRepository;
 import com.easy.iam.repository.TokenRepository;
@@ -18,6 +18,7 @@ import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Map;
@@ -40,20 +41,20 @@ public class AuthorizationServiceImpl implements AuthorizationService {
     CryptoService cryptoService;
 
     @Override
-    public TokenResponse generateTokens(TokenRequest tokenRequest) throws InvalidKeySpecException, NoSuchAlgorithmException {
+    public TokenResponse generateTokens(TokenRequest tokenRequest) throws InvalidKeySpecException, NoSuchAlgorithmException, IOException {
         Optional<AuthCode> authCode = authCodeRepository.findById(tokenRequest.getCode());
         Optional<ClientConfig> clientConfig = clientConfigRepository.findById(tokenRequest.getClient_id());
         if (authCode.isPresent()) {
             String tokenId = UUID.randomUUID().toString();
             String jwt = generateJWTToken(authCode.get(), tokenId, clientConfig.get());
-            Token token = new Token();
-            token.setToken_id(tokenId);
-            token.setClient_id(authCode.get().getClient_id());
-            token.setScope(authCode.get().getScope());
-            token.setUser_id(authCode.get().getUser_id());
-            token.setUser_name(authCode.get().getUser_name());
-            token.setToken(jwt);
-            tokenRepository.save(token);
+            TokenById tokenById = new TokenById();
+            tokenById.setToken_id(tokenId);
+            tokenById.setClient_id(authCode.get().getClient_id());
+            tokenById.setScope(authCode.get().getScope());
+            tokenById.setUser_id(authCode.get().getUser_id());
+            tokenById.setUser_name(authCode.get().getUser_name());
+            tokenById.setAccess_token(jwt);
+            tokenRepository.save(tokenById);
             authCodeRepository.deleteById(tokenRequest.getCode());
 
             TokenResponse tokenResponse = TokenResponse.builder()
@@ -68,7 +69,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         return null;
     }
 
-    private String generateJWTToken(AuthCode authCode, String tokenId, ClientConfig clientConfig) throws InvalidKeySpecException, NoSuchAlgorithmException {
+    private String generateJWTToken(AuthCode authCode, String tokenId, ClientConfig clientConfig) throws InvalidKeySpecException, NoSuchAlgorithmException, IOException {
         JwtBuilder jwtBuilder = Jwts.builder();
         JwsHeader jwsHeader = Jwts.jwsHeader();
         jwsHeader.setKeyId("eas1");
@@ -80,7 +81,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         jwtBuilder.setExpiration(DateTime.now().plusSeconds(28800).toDate());
         jwtBuilder.setIssuedAt(DateTime.now().toDate());
         jwtBuilder.setId(tokenId);
-        jwtBuilder.claim("scope", StringUtils.join(authCode.getScope(), ","));
+        jwtBuilder.claim("scope", authCode.getScope());
         jwtBuilder.claim("eid", authCode.getUser_name());
 
         return jwtBuilder.compact();
