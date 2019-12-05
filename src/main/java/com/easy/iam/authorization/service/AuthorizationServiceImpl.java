@@ -3,6 +3,9 @@ package com.easy.iam.authorization.service;
 import com.easy.iam.authorization.model.TokenRequest;
 import com.easy.iam.authorization.model.TokenResponse;
 import com.easy.iam.encryption.CryptoService;
+import com.easy.iam.exceptions.AuthCodeExpiredException;
+import com.easy.iam.exceptions.ClientConfigNotFoundException;
+import com.easy.iam.exceptions.GrantTypeNotAllowedException;
 import com.easy.iam.model.AuthCode;
 import com.easy.iam.model.ClientConfig;
 import com.easy.iam.model.TokenById;
@@ -42,11 +45,25 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
     @Override
     public TokenResponse generateTokens(TokenRequest tokenRequest) throws InvalidKeySpecException, NoSuchAlgorithmException, IOException {
-        Optional<AuthCode> authCode = authCodeRepository.findById(tokenRequest.getCode());
         Optional<ClientConfig> clientConfig = clientConfigRepository.findById(tokenRequest.getClient_id());
+        if (clientConfig.isEmpty()) {
+            throw new ClientConfigNotFoundException("Client config not found");
+        }
+        if (StringUtils.equals(tokenRequest.getGrant_type(), "authorization_code")) {
+            return getTokenResponseUsingAuthCodeFlow(tokenRequest, clientConfig.get());
+        } else {
+            throw new GrantTypeNotAllowedException("Grant Type not allowed");
+        }
+    }
+
+    private TokenResponse getTokenResponseUsingAuthCodeFlow(TokenRequest tokenRequest, ClientConfig clientConfig) throws InvalidKeySpecException, NoSuchAlgorithmException, IOException {
+        if (!clientConfig.getGrant_types().contains(tokenRequest.getGrant_type())) {
+            throw new GrantTypeNotAllowedException("Grant Type not allowed");
+        }
+        Optional<AuthCode> authCode = authCodeRepository.findById(tokenRequest.getCode());
         if (authCode.isPresent()) {
             String tokenId = UUID.randomUUID().toString();
-            String jwt = generateJWTToken(authCode.get(), tokenId, clientConfig.get());
+            String jwt = generateJWTToken(authCode.get(), tokenId, clientConfig);
             TokenById tokenById = new TokenById();
             tokenById.setToken_id(tokenId);
             tokenById.setClient_id(authCode.get().getClient_id());
@@ -65,14 +82,15 @@ public class AuthorizationServiceImpl implements AuthorizationService {
                     .scope(authCode.get().getScope())
                     .build();
             return tokenResponse;
+        } else {
+            throw new AuthCodeExpiredException("Auth code expired");
         }
-        return null;
     }
 
     private String generateJWTToken(AuthCode authCode, String tokenId, ClientConfig clientConfig) throws InvalidKeySpecException, NoSuchAlgorithmException, IOException {
         JwtBuilder jwtBuilder = Jwts.builder();
         JwsHeader jwsHeader = Jwts.jwsHeader();
-        jwsHeader.setKeyId("eas1");
+        jwsHeader.setKeyId("easy1");
         jwsHeader.setAlgorithm("RS256");
         jwtBuilder.setHeader((Map<String, Object>) jwsHeader);
         jwtBuilder.signWith(SignatureAlgorithm.RS256, cryptoService.getPrivateKey());

@@ -1,5 +1,8 @@
 package com.easy.iam.authentication.service;
 
+import com.easy.iam.exceptions.AccountNotFoundException;
+import com.easy.iam.exceptions.ClientConfigNotFoundException;
+import com.easy.iam.exceptions.InvalidCredentialsException;
 import com.easy.iam.model.AuthCode;
 import com.easy.iam.model.AuthCookie;
 import com.easy.iam.model.ClientConfig;
@@ -34,7 +37,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public String autheticateUser(String username, String password, String auth_cookie_id) {
         Optional<User> user = userAuthentication.findById(username);
         Optional<AuthCookie> authCookie = authCookieRepository.findById(auth_cookie_id);
-        if(user.isPresent()) {
+        if(user.isPresent() && authCookie.isPresent()) {
             if (StringUtils.equals(user.get().getPassword(), password)) {
                 AuthCookie authCookie1 = authCookie.get();
                 authCookie1.setUser_name(username);
@@ -42,14 +45,20 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 authCookie1.setAuthenticated(true);
                 authCookieRepository.save(authCookie1);
                 return user.get().getUser_id();
+            } else {
+                throw new InvalidCredentialsException("Invalid credentials");
             }
+        } else {
+            throw new AccountNotFoundException("Account not found");
         }
-        return null;
     }
 
     @Override
     public String getAuthCode(String client_id, String client_secret, String redirect_uri, String scope, String state, String auth_cookie_id) {
         Optional<ClientConfig> clientConfig = clientConfigRepository.findById(client_id);
+        if (clientConfig.isEmpty()) {
+            throw new ClientConfigNotFoundException("Client config not found");
+        }
         Optional<AuthCookie> authCookie = authCookieRepository.findById(auth_cookie_id);
         if (authCookie.isPresent() && authCookie.get().isAuthenticated()) {
             AuthCode authCode = generateAuthCode(client_id, clientConfig, authCookie);
