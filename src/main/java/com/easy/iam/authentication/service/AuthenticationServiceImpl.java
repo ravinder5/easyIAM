@@ -11,6 +11,7 @@ import com.easy.iam.repository.AuthCodeRepository;
 import com.easy.iam.repository.AuthCookieRepository;
 import com.easy.iam.repository.ClientConfigRepository;
 import com.easy.iam.repository.UserAuthentication;
+import com.easy.iam.webauthn.service.WebAuthnService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Autowired
     AuthCodeRepository authCodeRepository;
+
+    @Autowired
+    WebAuthnService webAuthnService;
 
     @Override
     public String autheticateUser(String username, String password, String auth_cookie_id) {

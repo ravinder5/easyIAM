@@ -5,7 +5,10 @@ CREATE TABLE easy_iam.authCookie (auth_cookie_id text, isAuthenticated boolean, 
 CREATE TABLE easy_iam.authCode (auth_code_id text, user_name text, user_id text, client_id text, scope text, PRIMARY KEY (auth_code_id));
 CREATE TABLE easy_iam.tokenById(token_id text, user_name text, user_id text, client_id text, scope text, access_token text, PRIMARY KEY (token_id));
 INSERT INTO easy_iam.authentication(user_name,user_id,password) VALUES ('test@test.com','12345','password');
-INSERT INTO easy_iam.clientConfig(client_id,client_secret,scope,grant_types) VALUES ('test-1.0.0','password','iam.admin',['authorization_code', 'refresh_token']);"
+INSERT INTO easy_iam.clientConfig(client_id,client_secret,scope,grant_types) VALUES ('test-1.0.0','password','iam.admin',['authorization_code', 'refresh_token']);
+CREATE TABLE easy_iam.webAuthnRegistrationRequest (registration_id text, registration_data text, PRIMARY KEY (registration_id));
+CREATE TABLE easy_iam.webAuthnCredentials (credential_id text, user_name text, registration_data text, PRIMARY KEY (credential_id));
+CREATE TABLE easy_iam.webAuthnAssertRequest (assertation_id text, assertation_data text, PRIMARY KEY (assertation_id));"
 
 
 until echo $CQL | cqlsh; do
