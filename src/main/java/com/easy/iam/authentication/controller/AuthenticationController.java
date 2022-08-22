@@ -56,20 +56,12 @@ public class AuthenticationController {
         return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(redirectUri)).build();
     }
 
-//    private String getAuthCookie(HttpServletRequest httpServletRequest) {
-//        Cookie[] cookies = httpServletRequest.getCookies();
-//        if (cookies != null) {
-//            for (Cookie cookie : cookies) {
-//                if (cookie.getName().equals("auth_cookie")) {
-//                    return cookie.getValue();
-//                }
-//            }
-//        }
-//        return null;
-//    }
-//
-//    private void setAuthCookie(HttpServletResponse httpServletResponse, String auth_cookie_id) {
-//        Cookie cookie = new Cookie("auth_cookie", auth_cookie_id);
-//        httpServletResponse.addCookie(cookie);
-//    }
+    @PostMapping("/reauth")
+    public String reAuthenticate(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse){
+        String auth_cookie_id = getAuthCookie(httpServletRequest);
+        authenticationService.reAutheticateUser(auth_cookie_id);
+        auth_cookie_id = UUID.randomUUID().toString();
+        setAuthCookie(httpServletResponse, auth_cookie_id);
+        return "success";
+    }
 }

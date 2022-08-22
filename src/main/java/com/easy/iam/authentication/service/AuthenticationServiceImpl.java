@@ -58,6 +58,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
+    public void reAutheticateUser(String auth_cookie_id) {
+        authCookieRepository.deleteById(auth_cookie_id);
+    }
+
+    @Override
     public String getAuthCode(String client_id, String client_secret, String redirect_uri, String scope, String state, String auth_cookie_id) {
         Optional<ClientConfig> clientConfig = clientConfigRepository.findById(client_id);
         if (clientConfig.isEmpty()) {
