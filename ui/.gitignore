@@ -1,0 +1,4 @@
+webauthn/node_modules
+dist/
+.vscode
+.env
